@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Forward Testing SOL/USDT - Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #1f2937;
+            --light: #f9fafb;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a2a6c, #2c3e50);
+            color: #e5e7eb;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 0;
+            margin-bottom: 30px;
+            border-bottom: 3px solid var(--primary);
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #6366f1, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            font-size: 1.1em;
+            color: #9ca3af;
+            margin-top: 5px;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: rgba(31, 41, 55, 0.85);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--primary);
+        }
+        
+        .card-title {
+            font-size: 1.4em;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .card-icon {
+            font-size: 2em;
+            color: var(--primary);
+        }
+        
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: rgba(55, 65, 81, 0.6);
+            border-radius: 10px;
+            transition: background 0.3s;
+        }
+        
+        .stat-item:hover {
+            background: rgba(99, 102, 241, 0.2);
+        }
+        
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            margin-bottom: 5px;
+            background: linear-gradient(45deg, #6366f1, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            color: #9ca3af;
+        }
+        
+        .positive {
+            color: var(--success) !important;
+        }
+        
+        .negative {
+            color: var(--danger) !important;
+        }
+        
+        .warning {
+            color: var(--warning) !important;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+        
+        .config-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #d1d5db;
+        }
+        
+        select, input, button {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid rgba(99, 102, 241, 0.5);
+            border-radius: 8px;
+            background: rgba(55, 65, 81, 0.8);
+            color: white;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+        }
+        
+        button {
+            background: linear-gradient(45deg, var(--primary), #8b5cf6);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(99, 102, 241, 0.6);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button.success {
+            background: linear-gradient(45deg, var(--success), #0ea5e9);
+        }
+        
+        button.warning {
+            background: linear-gradient(45deg, var(--warning), #ea580c);
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: var(--primary);
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+            transform: translateX(400px);
+            transition: transform 0.3s;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            background: linear-gradient(45deg, var(--success), #0ea5e9);
+        }
+        
+        .notification.error {
+            background: linear-gradient(45deg, var(--danger), #f97316);
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 3px solid var(--primary);
+        }
+        
+        .tab {
+            padding: 15px 30px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #9ca3af;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        th {
+            background: rgba(99, 102, 241, 0.2);
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .config-form {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Forward Testing SOL/USDT</h1>
+            <p class="subtitle">Dashboard de Análise com Detecção de Divergência e Notificações Telegram</p>
+        </header>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="dashboard">📊 Dashboard</div>
+            <div class="tab" data-tab="config">⚙️ Configuração</div>
+            <div class="tab" data-tab="divergence">⚠️ Divergências</div>
+            <div class="tab" data-tab="trades">💼 Operações</div>
+        </div>
+        
+        <!-- DASHBOARD TAB -->
+        <div id="dashboard" class="tab-content active">
+            <div class="dashboard">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">📈 Performance</div>
+                        <div class="card-icon">💰</div>
+                    </div>
+                    <div class="stat-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalTrades">-</div>
+                            <div class="stat-label">Total de Trades</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="winRate">-</div>
+                            <div class="stat-label">Win Rate</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="profitFactor">-</div>
+                            <div class="stat-label">Profit Factor</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="expectancy">-</div>
+                            <div class="stat-label">Expectativa</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">📉 Risco</div>
+                        <div class="card-icon">⚠️</div>
+                    </div>
+                    <div class="stat-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="maxDrawdown">-</div>
+                            <div class="stat-label">Max Drawdown</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalReturn">-</div>
+                            <div class="stat-label">Retorno Total</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="divergenceCount">-</div>
+                            <div class="stat-label">Divergências</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="divergenceRate">-</div>
+                            <div class="stat-label">Taxa de Divergência</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">📊 Curva de Capital</div>
+                    <div class="card-icon">📈</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="equityChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">🎯 Análise de Divergência</div>
+                    <div class="card-icon">🔍</div>
+                </div>
+                <div id="divergenceAnalysis">
+                    <p style="text-align: center; padding: 30px; color: #9ca3af;">
+                        Execute um backtest para ver a análise de divergência
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CONFIG TAB -->
+        <div id="config" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">⚙️ Configurações do Backtest</div>
+                    <div class="card-icon">🔧</div>
+                </div>
+                
+                <div class="config-form">
+                    <div class="form-group">
+                        <label for="timeframe">Timeframe</label>
+                        <select id="timeframe">
+                            <option value="1m">1 Minuto (24h)</option>
+                            <option value="5m" selected>5 Minutos (7 dias)</option>
+                            <option value="15m">15 Minutos (15 dias)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="days">Dias para Análise</label>
+                        <select id="days">
+                            <option value="1">1 dia</option>
+                            <option value="7">7 dias</option>
+                            <option value="15" selected>15 dias</option>
+                            <option value="30">30 dias</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="positionSize">Tamanho da Posição (SOL)</label>
+                        <input type="number" id="positionSize" value="40" step="1" min="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="fees">Fees Totais (%)</label>
+                        <input type="number" id="fees" value="0.15" step="0.01" min="0.01">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="stopLoss">Stop Loss (%)</label>
+                        <input type="number" id="stopLoss" value="0.8" step="0.1" min="0.1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="takeProfit">Take Profit (%)</label>
+                        <input type="number" id="takeProfit" value="1.5" step="0.1" min="0.5">
+                    </div>
+                </div>
+                
+                <div class="form-group" style="margin-top: 20px;">
+                    <button id="runBacktest" class="success">
+                        🚀 Executar Backtest
+                    </button>
+                </div>
+                
+                <div class="loading" id="loading">
+                    ⏳ Executando backtest... Aguarde por favor
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">📡 Notificações Telegram</div>
+                    <div class="card-icon">📱</div>
+                </div>
+                
+                <div class="config-form">
+                    <div class="form-group">
+                        <label for="telegramToken">Token do Bot</label>
+                        <input type="password" id="telegramToken" placeholder="Digite seu token">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="telegramChatId">Chat ID</label>
+                        <input type="text" id="telegramChatId" placeholder="Digite seu Chat ID">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="enableTelegram">
+                            Ativar Notificações
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group" style="margin-top: 20px;">
+                    <button id="saveConfig" class="warning">
+                        💾 Salvar Configurações
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- DIVERGENCE TAB -->
+        <div id="divergence" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">⚠️ Divergências Detectadas</div>
+                    <div class="card-icon">🚨</div>
+                </div>
+                
+                <div id="divergenceTable">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Horário</th>
+                                <th>Tipo</th>
+                                <th>Indicador</th>
+                                <th>Preço</th>
+                                <th>Severidade</th>
+                                <th>Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="divergenceTableBody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 30px; color: #9ca3af;">
+                                    Nenhuma divergência detectada. Execute um backtest primeiro.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- TRADES TAB -->
+        <div id="trades" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">💼 Histórico de Operações</div>
+                    <div class="card-icon">📊</div>
+                </div>
+                
+                <div id="tradesTable">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Entrada</th>
+                                <th>Saída</th>
+                                <th>Lado</th>
+                                <th>Entrada</th>
+                                <th>Saída</th>
+                                <th>PNL (%)</th>
+                                <th>Motivo</th>
+                                <th>Duração (min)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tradesTableBody">
+                            <tr>
+                                <td colspan="8" style="text-align: center; padding: 30px; color: #9ca3af;">
+                                    Nenhuma operação registrada. Execute um backtest primeiro.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification"></div>
+    
+    <script>
+        // State
+        let equityChart = null;
+        let currentResults = null;
+        
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab switching
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    this.classList.add('active');
+                    document.getElementById(this.dataset.tab).classList.add('active');
+                });
+            });
+            
+            // Load saved config
+            loadConfig();
+            
+            // Load results if available
+            loadResults();
+            
+            // Event listeners
+            document.getElementById('runBacktest').addEventListener('click', runBacktest);
+            document.getElementById('saveConfig').addEventListener('click', saveConfig);
+        });
+        
+        // Load configuration from backend
+        async function loadConfig() {
+            try {
+                const response = await fetch('/api/config');
+                const config = await response.json();
+                
+                if (config.timeframe) {
+                    document.getElementById('timeframe').value = config.timeframe;
+                    document.getElementById('days').value = config.days || 15;
+                    document.getElementById('positionSize').value = config.position_size || 40;
+                    document.getElementById('fees').value = config.fees * 100 || 0.15;
+                    document.getElementById('stopLoss').value = config.stop_loss_pct || 0.8;
+                    document.getElementById('takeProfit').value = config.take_profit_pct || 1.5;
+                    document.getElementById('telegramToken').value = config.telegram_token || '';
+                    document.getElementById('telegramChatId').value = config.telegram_chat_id || '';
+                    document.getElementById('enableTelegram').checked = config.enable_telegram || false;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar config:', error);
+            }
+        }
+        
+        // Save configuration
+        async function saveConfig() {
+            const config = {
+                timeframe: document.getElementById('timeframe').value,
+                days: parseInt(document.getElementById('days').value),
+                position_size: parseFloat(document.getElementById('positionSize').value),
+                fees: parseFloat(document.getElementById('fees').value) / 100,
+                stop_loss_pct: parseFloat(document.getElementById('stopLoss').value),
+                take_profit_pct: parseFloat(document.getElementById('takeProfit').value),
+                telegram_token: document.getElementById('telegramToken').value,
+                telegram_chat_id: document.getElementById('telegramChatId').value,
+                enable_telegram: document.getElementById('enableTelegram').checked
+            };
+            
+            try {
+                const response = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(config)
+                });
+                
+                const result = await response.json();
+                showNotification('Configuração salva com sucesso!', 'success');
+            } catch (error) {
+                showNotification('Erro ao salvar configuração', 'error');
+            }
+        }
+        
+        // Run backtest
+        async function runBacktest() {
+            const loading = document.getElementById('loading');
+            loading.style.display = 'block';
+            
+            const config = {
+                timeframe: document.getElementById('timeframe').value,
+                days: parseInt(document.getElementById('days').value)
+            };
+            
+            try {
+                const response = await fetch('/api/run-backtest', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(config)
+                });
+                
+                const results = await response.json();
+                
+                if (results.status === 'error') {
+                    showNotification('Erro: ' + results.message, 'error');
+                    loading.style.display = 'none';
+                    return;
+                }
+                
+                currentResults = results;
+                updateDashboard(results);
+                showNotification('Backtest concluído com sucesso!', 'success');
+                
+            } catch (error) {
+                showNotification('Erro ao executar backtest: ' + error.message, 'error');
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+        
+        // Load results from backend
+        async function loadResults() {
+            try {
+                const response = await fetch('/api/results');
+                const results = await response.json();
+                
+                if (results.statistics && results.statistics.total_trades > 0) {
+                    currentResults = results;
+                    updateDashboard(results);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar resultados:', error);
+            }
+        }
+        
+        // Update dashboard with results
+        function updateDashboard(results) {
+            const stats = results.statistics || {};
+            
+            // Update stats
+            document.getElementById('totalTrades').textContent = stats.total_trades || 0;
+            document.getElementById('winRate').textContent = (stats.win_rate || 0).toFixed(1) + '%';
+            document.getElementById('winRate').className = 'stat-value ' + (stats.win_rate > 55 ? 'positive' : 'negative');
+            
+            document.getElementById('profitFactor').textContent = (stats.profit_factor || 0).toFixed(2);
+            document.getElementById('profitFactor').className = 'stat-value ' + (stats.profit_factor > 1.4 ? 'positive' : 'negative');
+            
+            document.getElementById('expectancy').textContent = (stats.expectancy || 0).toFixed(2) + '%';
+            document.getElementById('expectancy').className = 'stat-value ' + (stats.expectancy > 0.3 ? 'positive' : 'negative');
+            
+            document.getElementById('maxDrawdown').textContent = (stats.max_drawdown || 0).toFixed(2) + '%';
+            document.getElementById('maxDrawdown').className = 'stat-value ' + (stats.max_drawdown > -3.5 ? 'positive' : 'negative');
+            
+            document.getElementById('totalReturn').textContent = (stats.total_return || 0).toFixed(2) + '%';
+            document.getElementById('totalReturn').className = 'stat-value ' + (stats.total_return > 0 ? 'positive' : 'negative');
+            
+            document.getElementById('divergenceCount').textContent = stats.divergence_count || 0;
+            document.getElementById('divergenceRate').textContent = (stats.divergence_rate || 0).toFixed(1) + '%';
+            
+            // Update equity chart
+            updateEquityChart(results.equity_curve || []);
+            
+            // Update divergence analysis
+            updateDivergenceAnalysis(results.divergences || []);
+            
+            // Update tables
+            updateDivergenceTable(results.divergences || []);
+            updateTradesTable(results.trades || []);
+        }
+        
+        // Update equity chart
+        function updateEquityChart(equityCurve) {
+            const ctx = document.getElementById('equityChart').getContext('2d');
+            
+            // Destroy existing chart if exists
+            if (equityChart) {
+                equityChart.destroy();
+            }
+            
+            if (equityCurve.length === 0) {
+                // Create empty chart
+                equityChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Capital',
+                            data: [],
+                            borderColor: '#6366f1',
+                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            x: { display: false },
+                            y: { 
+                                beginAtZero: false,
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                ticks: { color: '#9ca3af' }
+                            }
+                        }
+                    }
+                });
+                return;
+            }
+            
+            // Prepare data
+            const labels = equityCurve.map(point => {
+                const date = new Date(point[0]);
+                return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            });
+            
+            const data = equityCurve.map(point => point[1]);
+            
+            // Calculate percentage change
+            const initial = data[0];
+            const percentageData = data.map(value => ((value - initial) / initial * 100).toFixed(2));
+            
+            // Create chart
+            equityChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Capital (USDT)',
+                        data: data,
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Retorno (%)',
+                        data: percentageData,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: false,
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: {
+                            labels: { color: '#e5e7eb' }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(31, 41, 55, 0.9)',
+                            titleColor: '#e5e7eb',
+                            bodyColor: '#e5e7eb',
+                            borderColor: '#6366f1',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#9ca3af' }
+                        },
+                        y: {
+                            position: 'left',
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#6366f1' }
+                        },
+                        y1: {
+                            position: 'right',
+                            grid: { display: false },
+                            ticks: { color: '#10b981' },
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Update divergence analysis
+        async function updateDivergenceAnalysis(divergences) {
+            if (divergences.length === 0) {
+                document.getElementById('divergenceAnalysis').innerHTML = `
+                    <p style="text-align: center; padding: 30px; color: #9ca3af;">
+                        ✅ Nenhuma divergência significativa detectada
+                    </p>
+                `;
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/divergence-analysis');
+                const analysis = await response.json();
+                
+                let html = `
+                    <div style="padding: 20px;">
+                        <h3 style="color: var(--warning); margin-bottom: 20px;">
+                            📊 Análise de Divergência (${analysis.total_divergences} divergências detectadas)
+                        </h3>
+                        
+                        <div style="background: rgba(55, 65, 81, 0.6); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                            <p style="margin-bottom: 10px;">
+                                <strong>🎯 Indicador Mais Problemático:</strong> 
+                                <span style="color: var(--danger);">${analysis.most_problematic.toUpperCase()}</span>
+                            </p>
+                            <p style="margin-bottom: 10px;">
+                                <strong>💡 Recomendação:</strong> ${analysis.recommendation}
+                            </p>
+                        </div>
+                        
+                        <h4 style="color: var(--primary); margin-bottom: 15px;">📊 Taxa de Erro por Indicador:</h4>
+                `;
+                
+                for (const [indicator, stats] of Object.entries(analysis.by_indicator)) {
+                    const color = stats.impact === 'high' ? 'var(--danger)' : 
+                                 stats.impact === 'medium' ? 'var(--warning)' : 'var(--success)';
+                    
+                    html += `
+                        <div style="background: rgba(55, 65, 81, 0.6); padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <strong style="color: ${color};">${indicator.toUpperCase()}</strong>
+                                <span>${stats.count} divergências</span>
+                            </div>
+                            <div style="width: 100%; background: rgba(255, 255, 255, 0.1); border-radius: 5px; overflow: hidden;">
+                                <div style="width: ${stats.error_rate}%; background: ${color}; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.9em; font-weight: 600;">
+                                    ${stats.error_rate.toFixed(1)}% taxa de erro
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                html += `</div>`;
+                document.getElementById('divergenceAnalysis').innerHTML = html;
+                
+            } catch (error) {
+                console.error('Erro ao analisar divergências:', error);
+            }
+        }
+        
+        // Update divergence table
+        function updateDivergenceTable(divergences) {
+            const tbody = document.getElementById('divergenceTableBody');
+            
+            if (divergences.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 30px; color: #9ca3af;">
+                            ✅ Nenhuma divergência detectada
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = divergences.map(div => {
+                const time = new Date(div.timestamp).toLocaleTimeString('pt-BR');
+                const typeColor = div.type === 'BULLISH' ? 'var(--success)' : 
+                                 div.type === 'BEARISH' ? 'var(--danger)' : 'var(--warning)';
+                const severityColor = div.severity === 'HIGH' ? 'var(--danger)' : 
+                                     div.severity === 'MEDIUM' ? 'var(--warning)' : 'var(--success)';
+                
+                return `
+                    <tr>
+                        <td>${time}</td>
+                        <td style="color: ${typeColor}; font-weight: 600;">${div.type}</td>
+                        <td style="color: var(--primary);">${div.indicator}</td>
+                        <td>$${parseFloat(div.price).toFixed(4)}</td>
+                        <td style="color: ${severityColor}; font-weight: 600;">${div.severity}</td>
+                        <td>${div.indicator_action}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        // Update trades table
+        function updateTradesTable(trades) {
+            const tbody = document.getElementById('tradesTableBody');
+            
+            if (trades.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 30px; color: #9ca3af;">
+                            Nenhuma operação registrada
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = trades.map(trade => {
+                const entryTime = new Date(trade.entry_time).toLocaleTimeString('pt-BR');
+                const exitTime = new Date(trade.exit_time).toLocaleTimeString('pt-BR');
+                const pnlColor = trade.pnl_pct > 0 ? 'var(--success)' : 'var(--danger)';
+                const sideColor = trade.side === 'LONG' ? 'var(--success)' : 'var(--warning)';
+                
+                return `
+                    <tr>
+                        <td>${entryTime}</td>
+                        <td>${exitTime}</td>
+                        <td style="color: ${sideColor}; font-weight: 600;">${trade.side}</td>
+                        <td>$${trade.entry.toFixed(4)}</td>
+                        <td>$${trade.exit.toFixed(4)}</td>
+                        <td style="color: ${pnlColor}; font-weight: 600;">${trade.pnl_pct.toFixed(2)}%</td>
+                        <td>${trade.reason.replace('_', ' ')}</td>
+                        <td>${trade.duration_min.toFixed(1)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
